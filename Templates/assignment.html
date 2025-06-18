@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Base Scraper</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .emoji {
+            font-size: 1.2em;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .url-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .url-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .url-item {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .remove-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            background: #ff3742;
+            transform: scale(1.1);
+        }
+
+        .add-btn, .scrape-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-btn:hover, .scrape-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .scrape-btn {
+            font-size: 18px;
+            padding: 15px 30px;
+            margin-top: 20px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .scrape-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .file-upload {
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            background: rgba(102, 126, 234, 0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .file-upload:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: #5a67d8;
+        }
+
+        .file-upload.dragover {
+            background: rgba(102, 126, 234, 0.15);
+            border-color: #5a67d8;
+            transform: scale(1.02);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-list {
+            margin-top: 15px;
+        }
+
+        .file-item {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .progress-section {
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e1e5e9;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .log-container {
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            border: 2px solid #333;
+        }
+
+        .results-section {
+            display: none;
+        }
+
+        .results-summary {
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .download-btn {
+            background: #00b894;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .download-btn:hover {
+            background: #00a085;
+            transform: translateY(-2px);
+        }
+
+        .default-sources {
+            background: rgba(102, 126, 234, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .default-sources h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .default-sources ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .default-sources li {
+            padding: 8px 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .team-id-input {
+            width: 200px;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 20px;
+            }
+            
+            .section {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Knowledge Base Scraper</h1>
+            <p>Extract technical knowledge from any blog or website</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Configuration Section -->
+            <div class="section">
+                <h2><span class="emoji">⚙️</span> Configuration</h2>
+                <div class="input-group">
+                    <label for="teamId">Team ID:</label>
+                    <input type="text" id="teamId" class="team-id-input" value="aline123" placeholder="Enter team ID">
+                </div>
+            </div>
+
+            <!-- URL Sources Section -->
+            <div class="section">
+                <h2><span class="emoji">🌐</span> URL Sources</h2>
+                
+                <div class="default-sources">
+                    <h3>Default Sources (will be included automatically):</h3>
+                    <ul id="defaultSourcesList">
+                        <li>📝 https://interviewing.io/blog</li>
+                        <li>🏢 https://interviewing.io/topics#companies</li>
+                        <li>📚 https://interviewing.io/learn#interview-guides</li>
+                        <li>🧮 https://nilmamano.com/blog/category/dsa</li>
+                        <li>✍️ https://quill.co/blog</li>
+                        <li>📬 https://shreycation.substack.com</li>
+                    </ul>
+                </div>
+
+                <div class="input-group">
+                    <label for="urlInput">Add Additional URL:</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="url" id="urlInput" class="url-input" placeholder="https://example.com/blog">
+                        <button class="add-btn" onclick="addUrl()">
+                            <span>➕</span> Add
+                        </button>
+                    </div>
+                </div>
+
+                <div id="additionalUrls" class="url-list"></div>
+            </div>
+
+            <!-- PDF Upload Section -->
+            <div class="section">
+                <h2><span class="emoji">📄</span> PDF Documents</h2>
+                <div class="file-upload" onclick="document.getElementById('pdfInput').click()"
+                     ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                    <div style="font-size: 2em; margin-bottom: 10px;">📁</div>
+                    <p><strong>Click to select PDFs</strong> or drag and drop here</p>
+                    <p style="font-size: 14px; color: #666; margin-top: 5px;">Supports PDF files up to 10MB</p>
+                    <input type="file" id="pdfInput" class="file-input" multiple accept=".pdf" onchange="handleFileSelect(event)">
+                </div>
+                <div id="fileList" class="file-list"></div>
+            </div>
+
+            <!-- Action Section -->
+            <div class="section">
+                <button class="scrape-btn" onclick="startScraping()">
+                    <span>🚀</span> Start Scraping
+                </button>
+            </div>
+
+            <!-- Progress Section -->
+            <div class="section progress-section" id="progressSection">
+                <h2><span class="emoji">⚡</span> Scraping Progress</h2>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div id="progressText">Initializing...</div>
+                <div class="log-container" id="logContainer"></div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="section results-section" id="resultsSection">
+                <h2><span class="emoji">📊</span> Results</h2>
+                <div class="results-summary" id="resultsSummary"></div>
+                <button class="download-btn" onclick="downloadResults()">
+                    <span>💾</span> Download JSON
+                </button>
+                <button class="download-btn" onclick="viewResults()" style="margin-left: 10px; background: #667eea;">
+                    <span>👁️</span> View Results
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let additionalUrls = [];
+        let uploadedFiles = [];
+        let scrapingResults = null;
+
+        function addUrl() {
+            const urlInput = document.getElementById('urlInput');
+            const url = urlInput.value.trim();
+            
+            if (!url) {
+                alert('Please enter a URL');
+                return;
+            }
+
+            if (!isValidUrl(url)) {
+                alert('Please enter a valid URL');
+                return;
+            }
+
+            if (additionalUrls.includes(url)) {
+                alert('URL already added');
+                return;
+            }
+
+            additionalUrls.push(url);
+            urlInput.value = '';
+            updateUrlList();
+        }
+
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+
+        function updateUrlList() {
+            const container = document.getElementById('additionalUrls');
+            container.innerHTML = '';
+
+            additionalUrls.forEach((url, index) => {
+                const urlItem = document.createElement('div');
+                urlItem.className = 'url-item';
+                urlItem.innerHTML = `
+                    <input type="url" class="url-input" value="${url}" readonly>
+                    <button class="remove-btn" onclick="removeUrl(${index})">✕</button>
+                `;
+                container.appendChild(urlItem);
+            });
+        }
+
+        function removeUrl(index) {
+            additionalUrls.splice(index, 1);
+            updateUrlList();
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type === 'application/pdf');
+            addFiles(files);
+        }
+
+        function handleFileSelect(e) {
+            const files = Array.from(e.target.files);
+            addFiles(files);
+        }
+
+        function addFiles(files) {
+            files.forEach(file => {
+                if (file.size > 10 * 1024 * 1024) {
+                    alert(`File ${file.name} is too large (max 10MB)`);
+                    return;
+                }
+                
+                if (!uploadedFiles.find(f => f.name === file.name)) {
+                    uploadedFiles.push(file);
+                }
+            });
+            updateFileList();
+        }
+
+        function updateFileList() {
+            const container = document.getElementById('fileList');
+            container.innerHTML = '';
+
+            uploadedFiles.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <span>📄 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                    <button class="remove-btn" onclick="removeFile(${index})">✕</button>
+                `;
+                container.appendChild(fileItem);
+            });
+        }
+
+        function removeFile(index) {
+            uploadedFiles.splice(index, 1);
+            updateFileList();
+        }
+
+        async function startScraping() {
+            const teamId = document.getElementById('teamId').value.trim();
+            if (!teamId) {
+                alert('Please enter a team ID');
+                return;
+            }
+
+            // Show progress section
+            document.getElementById('progressSection').style.display = 'block';
+            document.getElementById('resultsSection').style.display = 'none';
+            
+            // Disable scrape button
+            const scrapeBtn = document.querySelector('.scrape-btn');
+            scrapeBtn.disabled = true;
+            scrapeBtn.innerHTML = '<span>⏳</span> Scraping...';
+
+            try {
+                // Simulate calling the Python script
+                await simulateScrapingProcess(teamId);
+            } catch (error) {
+                logMessage(`❌ Error: ${error.message}`, 'error');
+            } finally {
+                scrapeBtn.disabled = false;
+                scrapeBtn.innerHTML = '<span>🚀</span> Start Scraping';
+            }
+        }
+
+        async function simulateScrapingProcess(teamId) {
+            // Upload PDFs first if any
+            if (uploadedFiles.length > 0) {
+                await uploadPDFs();
+            }
+
+            // Start scraping process
+            try {
+                const response = await fetch('/api/scrape', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        team_id: teamId,
+                        additional_urls: additionalUrls
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+
+                // Start polling for status updates
+                pollScrapingStatus();
+
+            } catch (error) {
+                logMessage(`❌ Error starting scraping: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+
+        async function uploadPDFs() {
+            if (uploadedFiles.length === 0) return;
+
+            logMessage(`📤 Uploading ${uploadedFiles.length} PDF files...`);
+            
+            const formData = new FormData();
+            uploadedFiles.forEach(file => {
+                formData.append('files', file);
+            });
+
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.error) {
+                    logMessage(`❌ Upload error: ${result.error}`, 'error');
+                } else {
+                    logMessage(`✅ Uploaded ${result.files.length} PDF files`);
+                }
+            } catch (error) {
+                logMessage(`❌ Upload failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function pollScrapingStatus() {
+            const logContainer = document.getElementById('logContainer');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            let lastLogCount = 0;
+
+            const poll = async () => {
+                try {
+                    const response = await fetch('/api/status');
+                    const status = await response.json();
+
+                    // Update progress
+                    progressFill.style.width = status.progress + '%';
+                    progressText.textContent = status.current_task;
+
+                    // Add new log messages
+                    if (status.logs.length > lastLogCount) {
+                        const newLogs = status.logs.slice(lastLogCount);
+                        newLogs.forEach(log => {
+                            logMessage(log.message, log.level);
+                        });
+                        lastLogCount = status.logs.length;
+                    }
+
+                    if (status.error) {
+                        logMessage(`❌ Fatal error: ${status.error}`, 'error');
+                        return;
+                    }
+
+                    if (status.is_running) {
+                        // Continue polling
+                        setTimeout(poll, 1000);
+                    } else {
+                        // Scraping completed
+                        if (status.results) {
+                            scrapingResults = status.results;
+                            showResults(status.results.total_items);
+                        }
+                    }
+
+                } catch (error) {
+                    logMessage(`❌ Status polling error: ${error.message}`, 'error');
+                    setTimeout(poll, 2000); // Retry after 2 seconds
+                }
+            };
+
+            poll();
+        }
+
+        function showResults(totalItems) {
+            document.getElementById('resultsSection').style.display = 'block';
+            
+            const summary = document.getElementById('resultsSummary');
+            summary.innerHTML = `
+                <h3>🎉 Scraping Completed Successfully!</h3>
+                <p><strong>Total Items:</strong> ${totalItems}</p>
+                <p><strong>Team ID:</strong> ${scrapingResults.team_id}</p>
+                <p><strong>Output File:</strong> aline_knowledge_base.json</p>
+            `;
+        }
+
+        async function downloadResults() {
+            try {
+                const response = await fetch('/api/download');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'aline_knowledge_base.json';
+                link.click();
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                alert(`Error downloading results: ${error.message}`);
+            }
+        }
+
+        function viewResults() {
+            if (!scrapingResults) {
+                alert('No results to view');
+                return;
+            }
+
+            const newWindow = window.open('', '_blank');
+            newWindow.document.write(`
+                <html>
+                <head><title>Scraping Results</title></head>
+                <body>
+                    <h1>Knowledge Base Scraping Results</h1>
+                    <pre style="background: #f5f5f5; padding: 20px; border-radius: 5px; overflow: auto;">
+                        ${JSON.stringify(scrapingResults, null, 2)}
+                    </pre>
+                </body>
+                </html>
+            `);
+        }
+
+        function logMessage(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const timestamp = new Date().toLocaleTimeString();
+            const colorMap = {
+                info: '#00ff00',
+                error: '#ff4757',
+                warning: '#ffa502'
+            };
+            
+            const logEntry = document.createElement('div');
+            logEntry.style.color = colorMap[type] || '#00ff00';
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Allow Enter key to add URL
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addUrl();
+            }
+        });
+    </script>
+</body>
+</html>
